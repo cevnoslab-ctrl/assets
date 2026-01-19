@@ -58,7 +58,7 @@ NPM_DIR="$USER_HOME/.npm"
 
 if [ ! -d "$NPM_DIR" ]; then
   echo "Creating $NPM_DIR..."
-  mkdir -p "$NPM_DIR"
+  sudo mkdir -p "$NPM_DIR"
 fi
 
 echo "Fixing ownership of $NPM_DIR..."
