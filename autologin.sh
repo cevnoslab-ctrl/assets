@@ -50,6 +50,20 @@ setInterval(autoLogin, 2 * 60 * 1000);
 EOF
 
 # --------- 4. Install PM2 globally ----------
+# --------- Fix ~/.npm permissions ----------
+USER_HOME="$HOME"
+USER_ID=$(id -u)
+GROUP_ID=$(id -g)
+NPM_DIR="$USER_HOME/.npm"
+
+if [ ! -d "$NPM_DIR" ]; then
+  echo "Creating $NPM_DIR..."
+  mkdir -p "$NPM_DIR"
+fi
+
+echo "Fixing ownership of $NPM_DIR..."
+sudo chown -R "$USER_ID:$GROUP_ID" "$NPM_DIR"
+
 if ! command -v pm2 >/dev/null 2>&1; then
   echo "Installing PM2 globally..."
   npm install -g pm2
