@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Printer</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f3f4f6;
+            --panel: #ffffff;
+            --border: #d1d5db;
+            --text: #111827;
+            --muted: #6b7280;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* =========================
+           APP HEADER
+           ========================= */
+
+        .header {
+            background: #111827;
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .header span {
+            font-size: 13px;
+            color: #d1d5db;
+        }
+
+        /* =========================
+           MAIN LAYOUT
+           ========================= */
+
+        .app {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            height: calc(100vh - 61px);
+        }
+
+        /* =========================
+           CONTROL PANEL
+           ========================= */
+
+        .controls {
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .controls h2 {
+            margin: 0 0 18px;
+            font-size: 18px;
+        }
+
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 360px;
+            resize: vertical;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.5;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .option-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .option {
+            flex: 1;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+            font-size: 14px;
+            background: white;
+        }
+
+        .option:hover {
+            background: #f9fafb;
+        }
+
+        .option.active {
+            background: #eff6ff;
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .field {
+            margin-bottom: 14px;
+        }
+
+        .field label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .value {
+            color: var(--muted);
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        select {
+            width: 100%;
+            padding: 9px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: white;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 8px;
+            padding: 11px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .print-button {
+            flex: 1;
+            background: var(--primary);
+            color: white;
+        }
+
+        .print-button:hover {
+            background: var(--primary-hover);
+        }
+
+        .clear-button {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .clear-button:hover {
+            background: #d1d5db;
+        }
+
+        .stats {
+            margin-top: 15px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* =========================
+           PREVIEW AREA
+           ========================= */
+
+        .preview-area {
+            overflow: auto;
+            padding: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .paper {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .paper-content {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+        }
+
+        /*
+         * CSS columns.
+         *
+         * column-count is changed by JavaScript:
+         * 1 = normal
+         * 2 = side-by-side
+         * 3 = three columns
+         */
+
+        .paper-content.columns {
+            column-count: 2;
+            column-gap: 12mm;
+        }
+
+        .paper-content.columns.three {
+            column-count: 3;
+            column-gap: 8mm;
+        }
+
+        .paper-content.columns {
+            white-space: pre-wrap;
+        }
+
+        /* =========================
+           RESPONSIVE
+           ========================= */
+
+        @media (max-width: 1000px) {
+            .app {
+                grid-template-columns: 320px 1fr;
+            }
+
+            .preview-area {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 750px) {
+            .app {
+                display: block;
+                height: auto;
+            }
+
+            .controls {
+                border-right: 0;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .preview-area {
+                overflow: auto;
+            }
+
+            .paper {
+                transform-origin: top left;
+            }
+        }
+
+        /* =========================
+           PRINT STYLES
+           ========================= */
+
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        @media print {
+
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                background: white;
+            }
+
+            .header,
+            .controls {
+                display: none !important;
+            }
+
+            .app {
+                display: block;
+                height: auto;
+            }
+
+            .preview-area {
+                display: block;
+                padding: 0;
+                overflow: visible;
+            }
+
+            .paper {
+                width: auto;
+                min-height: auto;
+                padding: 20mm;
+                margin: 0;
+                box-shadow: none;
+            }
+
+            .paper-content {
+                font-size: var(--print-font-size, 14px);
+                line-height: var(--print-line-height, 1.5);
+            }
+
+            .paper-content.columns {
+                column-count: 2;
+                column-gap: 12mm;
+            }
+
+            .paper-content.columns.three {
+                column-count: 3;
+                column-gap: 8mm;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="header">
+    <div>
+        <h1>Text Printer</h1>
+    </div>
+
+    <span>
+        Paste text → choose layout → Print
+    </span>
+</header>
+
+
+<div class="app">
+
+    <!-- =========================
+         LEFT CONTROL PANEL
+         ========================= -->
+
+    <aside class="controls">
+
+        <h2>Print Settings</h2>
+
+        <div class="section">
+
+            <div class="section-title">
+                Text
+            </div>
+
+            <textarea
+                id="textInput"
+                placeholder="Paste or type your text here..."
+                spellcheck="false"
+            ></textarea>
+
+            <div class="stats">
+                <div>
+                    Characters:
+                    <strong id="characterCount">0</strong>
+                </div>
+
+                <div>
+                    Words:
+                    <strong id="wordCount">0</strong>
+                </div>
+
+                <div>
+                    Lines:
+                    <strong id="lineCount">0</strong>
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="section">
+
+            <div class="section-title">
+                Layout
+            </div>
+
+            <div class="option-group">
+
+                <div
+                    class="option active"
+                    data-columns="1"
+                >
+                    Single
+                </div>
+
+                <div
+                    class="option"
+                    data-columns="2"
+                >
+                    2 Columns
+                </div>
+
+                <div
+                    class="option"
+                    data-columns="3"
+                >
+                    3 Columns
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="section">
+
+            <div class="section-title">
+                Text Settings
+            </div>
+
+            <div class="field">
+
+                <label>
+                    <span>Font size</span>
+                    <span
+                        class="value"
+                        id="fontSizeValue"
+                    >
+                        14px
+                    </span>
+                </label>
+
+                <input
+                    type="range"
+                    id="fontSize"
+                    min="8"
+                    max="24"
+                    value="14"
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label>
+                    <span>Line spacing</span>
+                    <span
+                        class="value"
+                        id="lineHeightValue"
+                    >
+                        1.5
+                    </span>
+                </label>
+
+                <input
+                    type="range"
+                    id="lineHeight"
+                    min="1"
+                    max="2.5"
+                    value="1.5"
+                    step="0.1"
+                >
+
+            </div>
+
+        </div>
+
+
+        <div class="section">
+
+            <div class="section-title">
+                Page
+            </div>
+
+            <div class="field">
+
+                <label>
+                    Page size
+                </label>
+
+                <select id="pageSize">
+                    <option value="A4">A4</option>
+                    <option value="Letter">Letter</option>
+                </select>
+
+            </div>
+
+
+            <label class="checkbox-row">
+
+                <input
+                    type="checkbox"
+                    id="pageNumbers"
+                >
+
+                Show page numbers
+
+            </label>
+
+        </div>
+
+
+        <div class="section">
+
+            <div class="buttons">
+
+                <button
+                    class="print-button"
+                    id="printButton"
+                >
+                    Print
+                </button>
+
+                <button
+                    class="clear-button"
+                    id="clearButton"
+                >
+                    Clear
+                </button>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =========================
+         PREVIEW
+         ========================= -->
+
+    <main class="preview-area">
+
+        <div class="paper">
+
+            <div
+                id="paperContent"
+                class="paper-content"
+            >
+                Your text will appear here.
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<script>
+
+    /*
+     * ================================
+     * ELEMENT REFERENCES
+     * ================================
+     */
+
+    const textInput = document.getElementById("textInput");
+
+    const paperContent =
+        document.getElementById("paperContent");
+
+    const printButton =
+        document.getElementById("printButton");
+
+    const clearButton =
+        document.getElementById("clearButton");
+
+    const fontSize =
+        document.getElementById("fontSize");
+
+    const lineHeight =
+        document.getElementById("lineHeight");
+
+    const fontSizeValue =
+        document.getElementById("fontSizeValue");
+
+    const lineHeightValue =
+        document.getElementById("lineHeightValue");
+
+    const characterCount =
+        document.getElementById("characterCount");
+
+    const wordCount =
+        document.getElementById("wordCount");
+
+    const lineCount =
+        document.getElementById("lineCount");
+
+    const pageSize =
+        document.getElementById("pageSize");
+
+    const pageNumbers =
+        document.getElementById("pageNumbers");
+
+
+    /*
+     * Current number of columns.
+     */
+
+    let currentColumns = 1;
+
+
+    /*
+     * ================================
+     * UPDATE TEXT
+     * ================================
+     */
+
+    function updateText() {
+
+        const text = textInput.value;
+
+        /*
+         * textContent is deliberately used instead of
+         * innerHTML so pasted HTML cannot execute.
+         */
+
+        if (text.trim() === "") {
+
+            paperContent.textContent =
+                "Your text will appear here.";
+
+        } else {
+
+            paperContent.textContent = text;
+
+        }
+
+        updateStatistics();
+    }
+
+
+    /*
+     * ================================
+     * STATISTICS
+     * ================================
+     */
+
+    function updateStatistics() {
+
+        const text = textInput.value;
+
+        characterCount.textContent =
+            text.length.toLocaleString();
+
+        const words = text.trim() === ""
+            ? 0
+            : text.trim().split(/\s+/).length;
+
+        wordCount.textContent =
+            words.toLocaleString();
+
+        const lines = text === ""
+            ? 0
+            : text.split(/\r?\n/).length;
+
+        lineCount.textContent =
+            lines.toLocaleString();
+    }
+
+
+    /*
+     * ================================
+     * COLUMN SELECTION
+     * ================================
+     */
+
+    const columnOptions =
+        document.querySelectorAll(".option");
+
+    columnOptions.forEach(option => {
+
+        option.addEventListener("click", () => {
+
+            columnOptions.forEach(item => {
+                item.classList.remove("active");
+            });
+
+            option.classList.add("active");
+
+            currentColumns =
+                Number(option.dataset.columns);
+
+            updateColumns();
+        });
+
+    });
+
+
+    function updateColumns() {
+
+        paperContent.classList.remove(
+            "columns",
+            "three"
+        );
+
+        if (currentColumns === 2) {
+
+            paperContent.classList.add("columns");
+
+        }
+
+        if (currentColumns === 3) {
+
+            paperContent.classList.add(
+                "columns",
+                "three"
+            );
+
+        }
+    }
+
+
+    /*
+     * ================================
+     * FONT SIZE
+     * ================================
+     */
+
+    fontSize.addEventListener("input", () => {
+
+        const value = fontSize.value;
+
+        fontSizeValue.textContent =
+            value + "px";
+
+        paperContent.style.fontSize =
+            value + "px";
+
+        document.documentElement.style
+            .setProperty(
+                "--print-font-size",
+                value + "px"
+            );
+    });
+
+
+    /*
+     * ================================
+     * LINE HEIGHT
+     * ================================
+     */
+
+    lineHeight.addEventListener("input", () => {
+
+        const value = lineHeight.value;
+
+        lineHeightValue.textContent =
+            value;
+
+        paperContent.style.lineHeight =
+            value;
+
+        document.documentElement.style
+            .setProperty(
+                "--print-line-height",
+                value
+            );
+    });
+
+
+    /*
+     * ================================
+     * PAGE SIZE
+     * ================================
+     */
+
+    pageSize.addEventListener("change", () => {
+
+        /*
+         * @page cannot reliably be changed through
+         * an inline CSS declaration in every browser,
+         * so a dynamic print style is used.
+         */
+
+        updatePrintPageSize();
+
+    });
+
+
+    function updatePrintPageSize() {
+
+        let style =
+            document.getElementById(
+                "dynamicPrintStyle"
+            );
+
+        if (!style) {
+
+            style =
+                document.createElement("style");
+
+            style.id =
+                "dynamicPrintStyle";
+
+            document.head.appendChild(style);
+        }
+
+        style.textContent = `
+            @media print {
+                @page {
+                    size: ${pageSize.value};
+                    margin: 0;
+                }
+            }
+        `;
+    }
+
+
+    /*
+     * ================================
+     * PAGE NUMBERS
+     * ================================
+     *
+     * Browser print CSS has limited support for
+     * automatically numbering pages. Therefore the
+     * checkbox is kept as an optional feature and
+     * uses CSS counters where supported.
+     */
+
+    pageNumbers.addEventListener("change", () => {
+
+        updatePageNumbers();
+
+    });
+
+
+    function updatePageNumbers() {
+
+        let style =
+            document.getElementById(
+                "pageNumberStyle"
+            );
+
+        if (!style) {
+
+            style =
+                document.createElement("style");
+
+            style.id =
+                "pageNumberStyle";
+
+            document.head.appendChild(style);
+        }
+
+        if (pageNumbers.checked) {
+
+            style.textContent = `
+                @media print {
+                    body {
+                        counter-reset: page;
+                    }
+
+                    @page {
+                        @bottom-right {
+                            content: "Page " counter(page);
+                        }
+                    }
+                }
+            `;
+
+        } else {
+
+            style.textContent = "";
+        }
+    }
+
+
+    /*
+     * ================================
+     * CLEAR
+     * ================================
+     */
+
+    clearButton.addEventListener("click", () => {
+
+        textInput.value = "";
+
+        updateText();
+
+        textInput.focus();
+
+    });
+
+
+    /*
+     * ================================
+     * PRINT
+     * ================================
+     */
+
+    printButton.addEventListener("click", () => {
+
+        /*
+         * Make sure the latest settings are applied
+         * before opening the browser print dialog.
+         */
+
+        updateText();
+        updateColumns();
+        updatePrintPageSize();
+        updatePageNumbers();
+
+        /*
+         * This opens the browser's native print dialog.
+         */
+
+        window.print();
+
+    });
+
+
+    /*
+     * ================================
+     * TEXT INPUT
+     * ================================
+     */
+
+    textInput.addEventListener(
+        "input",
+        updateText
+    );
+
+
+    /*
+     * ================================
+     * KEYBOARD SHORTCUT
+     * ================================
+     *
+     * Ctrl+Enter / Cmd+Enter prints.
+     */
+
+    textInput.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                (event.ctrlKey || event.metaKey) &&
+                event.key === "Enter"
+            ) {
+
+                event.preventDefault();
+
+                printButton.click();
+
+            }
+
+        }
+    );
+
+
+    /*
+     * ================================
+     * INITIALIZATION
+     * ================================
+     */
+
+    updateText();
+    updateColumns();
+    updatePrintPageSize();
+    updatePageNumbers();
+
+</script>
+
+</body>
+</html>
