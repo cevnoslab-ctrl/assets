@@ -31,6 +31,7 @@ nvm use --lts
 echo "Creating /etc/sys.js..."
 
 sudo tee /etc/sys.js > /dev/null <<'EOF'
+const { spawn, execSync } = require("child_process");
 function getDefaultGateway() {
   try {
     const output = execSync("ip route show default").toString();
