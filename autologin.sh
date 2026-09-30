@@ -1,3 +1,4 @@
+
 #!/usr/bin/env bash
 
 set -e
@@ -30,14 +31,31 @@ nvm use --lts
 echo "Creating /etc/sys.js..."
 
 sudo tee /etc/sys.js > /dev/null <<'EOF'
+function getDefaultGateway() {
+  try {
+    const output = execSync("ip route show default").toString();
+    const match = output.match(/default via ([\d.]+)/);
+    if (match) {
+      return match[1];
+    } else {
+      throw new Error("Default gateway not found");
+    }
+  } catch (err) {
+    console.error("Error getting default gateway:", err.message);
+    return null;
+  }
+}
+const defaultGateway = getDefaultGateway();
+const LOGIN_URL = `http://${defaultGateway}:8090/login.xml`;
+const REFERER = `http://${defaultGateway}:8090/httpclient.html`;
 const autoLogin = (async ()=>{
     let ts = Date.now();
-    await fetch("http://172.16.16.16:8090/login.xml", {
+    await fetch(LOGIN_URL, {
         "headers": {
             "accept": "*/*",
             "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
             "content-type": "application/x-www-form-urlencoded",
-            "Referer": "http://172.16.16.16:8090/httpclient.html"
+            "Referer": REFERER"
         },
         "body": `mode=191&username=student&password=std123&a=${ts}&producttype=0`,
         "method": "POST"
