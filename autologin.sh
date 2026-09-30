@@ -55,7 +55,7 @@ const autoLogin = (async ()=>{
             "accept": "*/*",
             "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
             "content-type": "application/x-www-form-urlencoded",
-            "Referer": REFERER"
+            "Referer": REFERER
         },
         "body": `mode=191&username=student&password=std123&a=${ts}&producttype=0`,
         "method": "POST"
